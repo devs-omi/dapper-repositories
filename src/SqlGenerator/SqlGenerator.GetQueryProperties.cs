@@ -6,7 +6,6 @@ using MicroOrm.Dapper.Repositories.SqlGenerator.QueryExpressions;
 
 namespace MicroOrm.Dapper.Repositories.SqlGenerator;
 
-
 public partial class SqlGenerator<TEntity>
     where TEntity : class
 {
@@ -75,7 +74,12 @@ public partial class SqlGenerator<TEntity>
 
                     var propertyValue = ExpressionHelper.GetValuesFromStringMethod(methodCallExpression);
                     var likeValue = ExpressionHelper.GetSqlLikeValue(methodName, propertyValue);
-                    var opr = ExpressionHelper.GetMethodCallSqlOperator(methodName, isNotUnary);
+                    var postgreSqlIgnoreCase = Provider == SqlProvider.PostgreSQL && methodCallExpression.Arguments.Any(argument =>
+                        argument.Type == typeof(StringComparison) && argument is ConstantExpression
+                        {
+                            Value: StringComparison and (StringComparison.InvariantCultureIgnoreCase or StringComparison.CurrentCultureIgnoreCase)
+                        });
+                    var opr = ExpressionHelper.GetMethodCallSqlOperator(methodName, isNotUnary, postgreSqlIgnoreCase);
                     var link = ExpressionHelper.GetSqlOperator(linkingType);
                     return new QueryParameterExpression(link, propertyName, likeValue, opr, isNested);
                 }
