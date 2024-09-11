@@ -153,14 +153,21 @@ internal static class ExpressionHelper
         }
     }
 
-    public static string GetMethodCallSqlOperator(string methodName, bool isNotUnary = false)
+    public static string GetMethodCallSqlOperator(string methodName, bool isNotUnary = false, bool postgreSqlIgnoreCase = false)
     {
         switch (methodName)
         {
             case "StartsWith":
             case "EndsWith":
             case "StringContains":
+            {
+                if (postgreSqlIgnoreCase)
+                {
+                    return isNotUnary ? "NOT ILIKE" : "ILIKE";
+                }
+
                 return isNotUnary ? "NOT LIKE" : "LIKE";
+            }
 
             case "Contains":
                 return isNotUnary ? "NOT IN" : "IN";
